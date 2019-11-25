@@ -1,0 +1,9 @@
+*.o
+*.mod.*
+*.ko
+*.order
+*.symvers
+*.tar.gz
+*.mod
+*.cmd
+tags
