@@ -118,36 +118,42 @@ int custom_rb_delete(struct rb_root *mytree, int key){
 int ith(void *args){
 	struct rb_root *root = ((rd *)args)->root;
 	mytype *data = ((rd *)args)->data;
+	rb_insert(root, data);
 	return 0;
 }
 
 int cith(void *args){
 	struct rb_root *root = ((rd *)args)->root;
 	mytype *data = ((rd *)args)->data;
+	custom_rb_insert(root, data);
 	return 0;
 }
 
 int sth(void *args){
 	struct rb_root *root = ((rk *)args)->root;
 	int key = ((rk *)args)->key;
+	rb_search(root, key);
 	return 0;
 }
 
 int csth(void *args){
 	struct rb_root *root = ((rk *)args)->root;
 	int key = ((rk *)args)->key;
+	custom_rb_search(root, key);
 	return 0;
 }
 
 int dth(void *args){
 	struct rb_root *root = ((rk *)args)->root;
 	int key = ((rk *)args)->key;
+	rb_delete(root, key);
 	return 0;
 }
 
 int cdth(void *args){
 	struct rb_root *root = ((rk *)args)->root;
 	int key = ((rk *)args)->key;
+	custom_rb_delete(root, key);
 	return 0;
 }
 
