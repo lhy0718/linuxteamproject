@@ -7,3 +7,5 @@
 *.mod
 *.cmd
 tags
+*.swp
+*.out
