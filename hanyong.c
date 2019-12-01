@@ -1,13 +1,15 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
 #include "custom_rbtree.h"
 #include "custom_timer.h"
 
 #define FALSE 0
 #define TRUE 1
 
-TIMER_INIT;
+spinlock_t lock;
 
 typedef struct{
 	struct rb_node node;
@@ -15,6 +17,7 @@ typedef struct{
 	int value;
 }mytype;
 
+//thread arguments
 typedef struct{
 	struct rb_root *root;
 	mytype *data;
@@ -82,7 +85,7 @@ mytype *rb_search(struct rb_root *root, int key){
 
 mytype *custom_rb_search(struct rb_root *root, int key){
 	struct rb_node *node = root->rb_node;
-
+	
 	while(node){
 		mytype *data = container_of(node, mytype, node);
 		if(data->key > key)
@@ -139,7 +142,11 @@ int sth(void *args){
 int csth(void *args){
 	struct rb_root *root = ((rk *)args)->root;
 	int key = ((rk *)args)->key;
+	TIMER_INIT;
+	TIMER_START;
 	custom_rb_search(root, key);
+	TIMER_END;
+	printk("thread %ld ns\n", TIMER);
 	return 0;
 }
 
@@ -158,7 +165,43 @@ int cdth(void *args){
 }
 
 void test(void){
-	struct rb_root control, treatment;
+	struct rb_root control = RB_ROOT, treatment = RB_ROOT;
+	int loop;
+	rk *search_target = kmalloc(sizeof(rk), GFP_KERNEL);
+	TIMER_INIT;
+	for(loop = 0; loop < 100000; loop++){
+		mytype *new = kmalloc(sizeof(mytype), GFP_KERNEL);
+		if (!new)
+			break;
+		new->value = loop;
+		new->key = loop;
+		rb_insert(&control, new);
+	}
+	for(loop = 0; loop < 100000; loop++){
+		mytype *new = kmalloc(sizeof(mytype), GFP_KERNEL);
+		if (!new)
+			break;
+		new->value = loop;
+		new->key = loop;
+		rb_insert(&treatment, new);
+	}
+
+	for(loop=0; loop<10; loop++){
+		TIMER_START;
+		rb_search(&control, 100000);
+		TIMER_END;
+		printk("control : %ld ns\n", TIMER);
+	}
+	for(loop = 0; loop < 100000; loop){
+		rb_delete
+	}
+	search_target->root = &treatment;
+	search_target->key = 100000;
+	printk("asdf\n");
+	//for(loop=0; loop<10; loop++){
+		kthread_run(&csth, search_target, "thread");
+	//	mdelay(100);
+	//}
 }
 
 int __init _module_init(void){
