@@ -8,9 +8,19 @@
 
 
 void test(void){
-	LockFreeRBNode *root = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);
 	int loop;
+	LockFreeRBNode *root;
+
 	TIMER_INIT;
+
+	root = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);
+	root->value = INT_MIN;
+	root->left = NULL;
+	root->right = NULL;
+	root->parent = NULL;
+	root->isRed = false;
+	root->flag = false;
+
 	TIMER_START;
 	for(loop=0; loop<1000; loop++){
 		insert(loop, &root);

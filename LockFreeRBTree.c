@@ -6,16 +6,27 @@
 #define true 1
 #define false 0
 
-#ifndef DEBUG_INIT
-#define DEBUG_INIT int debug_count = 0
-#endif
-#define DEBUG printk("==============DEBUG%d :)===============\n", debug_count++)
+#define LockFreeRBNode_constructor(name) name = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);\
+	name->value = INT_MIN;\
+	name->left = NULL;\
+	name->right = NULL;\
+	name->parent = NULL;\
+	name->isRed = false;\
+	name->flag = false;
 
-DEBUG_INIT;
+#define LockFreeRBNode_constructor_value(name, left_node, right_node, _value) name = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);\
+	name->value = (_value);\
+	name->left = left_node;\
+	name->right = right_node;\
+	name->parent = NULL;\
+	name->isRed = true;\
+	name->flag = false;
+
+#define DEBUG(n) printk(#n); printk("====\n");
 
 int search(int value, LockFreeRBNode *root){
 	LockFreeRBNode* temp;
-	if(root == NULL) return -1;
+	if(root == NULL) return INT_MIN;
 	temp = root;
 	while(temp != NULL && temp->value >= 0){
 		if (value < temp->value) {
@@ -31,40 +42,35 @@ int search(int value, LockFreeRBNode *root){
 
 void insert(int value, LockFreeRBNode **root)
 {
-	LockFreeRBNode *insertedNode;
+	LockFreeRBNode *insertedNode, *insertedNodeLeft, *insertedNodeRight;
 	LockFreeRBNode *temp1, *temp2;
-	insertedNode = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);
-
-	insertedNode->value = value;
-	insertedNode->left = NULL;
-	insertedNode->right = NULL;
-	insertedNode->parent = NULL;
-	insertedNode->isRed = false;
+	
+	LockFreeRBNode_constructor(insertedNodeLeft);
+	LockFreeRBNode_constructor(insertedNodeRight);
+	LockFreeRBNode_constructor_value(insertedNode, insertedNodeLeft, insertedNodeRight, value);
 	insertedNode->flag = true;
+	
 	while(true)
 	{
 		temp1 = *root;
 		temp2 = NULL;
-DEBUG;
 		while(temp1->value >= 0)
 		{
-DEBUG;
 			temp2 = temp1;
 			if(value<temp1->value)
 				temp1 = temp1->left;
 			else
 				temp1 = temp1->right;
 		}
-DEBUG;
+DEBUG(2);
 		if(!setupLocalAreaForInsert(temp2))  // todo
 		{
-DEBUG;
+DEBUG(3);
 			temp2->flag = false;
 			continue;
 		} 
 		else break;
 	}
-
 	insertedNode->parent = temp2;
 	if(!temp2)
 	{
@@ -72,27 +78,41 @@ DEBUG;
 	}else if (value < temp2->value){
 		temp2->left = insertedNode;
 	}else {
+DEBUG(3-5);
 		temp2->right = insertedNode;
+DEBUG(3-6);
 	}
+DEBUG(3-7);
 	insertedNode->left->parent = insertedNode;
 	insertedNode->right->parent = insertedNode;
 	insertedNode->isRed = true;
+DEBUG(3-8);
 	rbInsertFixup(insertedNode, *root); // todo
+DEBUG(3-9);
 }
 
 int setupLocalAreaForInsert(LockFreeRBNode *x) {
 	LockFreeRBNode *parent, *uncle;
+	if(!x){
+		return true;
+	}
 	parent= x->parent;
+DEBUG(4);
 	if (!x) {
 		return true;
 	}
-	if (!parent) return true;
+DEBUG(5);
+	if (!parent) {
+		return true;
+	}
+DEBUG(6);
 	if (!__sync_bool_compare_and_swap(&x->flag, false, true)) {
 		return false;
 	}
 	if (!__sync_bool_compare_and_swap(&parent->flag, false, true)) {
 		return false;
 	}
+DEBUG(7);
 	if (parent != x->parent) {
 		parent->flag = false;
 		return false;
