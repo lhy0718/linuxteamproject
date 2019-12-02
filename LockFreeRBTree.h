@@ -6,6 +6,22 @@
 #include <linux/list.h>
 #include <linux/rcupdate.h>
 
+#define LockFreeRBNode_constructor(name) name = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);\
+	name->value = INT_MIN;\
+	name->left = NULL;\
+	name->right = NULL;\
+	name->parent = NULL;\
+	name->isRed = false;\
+	name->flag = false;
+
+#define LockFreeRBNode_constructor_value(name, left_node, right_node, _value) name = kmalloc(sizeof(LockFreeRBNode), GFP_KERNEL);\
+	 name->value = (_value);\
+	 name->left = left_node;\
+	 name->right = right_node;\
+	 name->parent = NULL;\
+	 name->isRed = true;\
+	 name->flag = false;
+
 struct LockFreeRBNode{
   int value;
   struct LockFreeRBNode* left;
