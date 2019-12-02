@@ -6,6 +6,13 @@
 #define true 1
 #define false 0
 
+#ifndef DEBUG_INIT
+#define DEBUG_INIT int debug_count = 0
+#endif
+#define DEBUG printk("==============DEBUG%d :)===============\n", debug_count++)
+
+DEBUG_INIT;
+
 int search(int value, LockFreeRBNode *root){
 	LockFreeRBNode* temp;
 	if(root == NULL) return -1;
@@ -38,16 +45,20 @@ void insert(int value, LockFreeRBNode **root)
 	{
 		temp1 = *root;
 		temp2 = NULL;
+DEBUG;
 		while(temp1->value >= 0)
 		{
+DEBUG;
 			temp2 = temp1;
 			if(value<temp1->value)
 				temp1 = temp1->left;
 			else
 				temp1 = temp1->right;
 		}
+DEBUG;
 		if(!setupLocalAreaForInsert(temp2))  // todo
 		{
+DEBUG;
 			temp2->flag = false;
 			continue;
 		} 
