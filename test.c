@@ -7,8 +7,8 @@
 #include "LockFreeRBTree.h"
 #include "custom_timer.h"
 
-#define SIZE 1000
-#define NUM_OF_THREAD 5
+#define SIZE 100000
+#define NUM_OF_THREAD 10
 
 
 typedef struct{
@@ -24,11 +24,12 @@ typedef struct{
 int insert_thread(void *arg){
 	int value, loop;
 	LockFreeRBNode *root;
+	args tmp = *(args *)arg;
 	
 	TIMER_INIT;
 	
-	value = ((args *)arg)->value;
-	root = ((args *)arg)->root;
+	value = tmp.value;
+	root = tmp.root;
 	
 	TIMER_START;
 	for(loop=value; loop < SIZE; loop += NUM_OF_THREAD)
@@ -58,10 +59,10 @@ int rb_insert(struct rb_root *root, mynode *data) {
 }
 
 void set_and_run_insert(int val, LockFreeRBNode *root){ 
-	args tmp;
-	tmp.root = root;
-	tmp.value = val;
-	kthread_run(&insert_thread, &tmp, "thread");
+	args *tmp = kmalloc(sizeof(args), GFP_KERNEL);
+	tmp->root = root;
+	tmp->value = val;
+	kthread_run(&insert_thread, tmp, "thread");
 }
 
 void test(void){
@@ -73,12 +74,6 @@ void test(void){
 
 	LockFreeRBNode_constructor(lock_free_root);
 	rb_root = RB_ROOT;
-
-	set_and_run_insert(0, lock_free_root);
-	set_and_run_insert(1, lock_free_root);
-	set_and_run_insert(2, lock_free_root);
-	set_and_run_insert(3, lock_free_root);
-	set_and_run_insert(4, lock_free_root);
 
 	TIMER_START;
 	for(loop=0; loop<SIZE; loop++){
@@ -92,6 +87,17 @@ void test(void){
 	}
 	TIMER_END;
 	printk("rb tree timer: %ld ns\n", TIMER);
+
+	set_and_run_insert(0, lock_free_root);
+	set_and_run_insert(1, lock_free_root);
+	set_and_run_insert(2, lock_free_root);
+	set_and_run_insert(3, lock_free_root);
+	set_and_run_insert(4, lock_free_root);
+	set_and_run_insert(5, lock_free_root);
+	set_and_run_insert(6, lock_free_root);
+	set_and_run_insert(7, lock_free_root);
+	set_and_run_insert(8, lock_free_root);
+	set_and_run_insert(9, lock_free_root);
 }
 
 int __init _module_init(void){
